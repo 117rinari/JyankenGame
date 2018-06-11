@@ -3,39 +3,70 @@
 #include <time.h>
 
 void Jyanken();
-void Pattern1();
+int Pattern1(int, int, int, int, int);
 void Pattern2();
 void Pattern3();
 void Pattern4();
 void Show_Hand();
 int Judge(int, int);
 void Result(int, int);
+void Game(int (*func)());
 void GameEnd(int, int);
 
 int main(void)
 {
-  Pattern1();
+  Jyanken();
 
   return 0;
 }
 
-void Pattern1()
+void Jyanken()
 {
-  //
-  int count = 0, Player_wins = 0, Enemy_wins = 0;
+  //パターンを関数ポインタにて決定
+  int (*fp)() = Pattern1;
 
-  //
-  int Player_hand, Enemy_hand;
+  //1回目のじゃんけんゲームを開始
+  Game(fp);
+
+  char c = 'A';//適当な文字で初期化
+  while(1){
+    printf("続行:n   やめる:z\n\n");
+    scanf("%c", &c);
+    while(getchar() != '\n');
+    if(c != 'n' && c != 'z') continue;
+    if(c == 'z') break;
+
+    //2戦目以降のゲーム
+    fp = Pattern1;
+    Game(fp);
+    printf("\n");
+  }
+}
+
+void Game(int (*func)())
+{
+  ///////////* ゲーム内で使用する変数 *///////////
+  //じゃんけん数、プレイヤーの勝ち数、敵の勝ち数
+  int gamecount = 0, Player_wins = 0, Enemy_wins = 0;
+
+  //プレイヤーの手、敵の手、直前のプレイヤーの手、直前の敵の手
+  int Player_hand, Enemy_hand, Player_before_hand = -1, Enemy_before_hand = -1;
+
+  ///////////////////////////////////////////////
 
   //じゃんけんのループ
-  while(Player_wins + Enemy_wins < 5){
-    //プレイヤーの選択肢
+  while(Player_wins < 3 && Enemy_wins < 3){
+    //プレイヤーの手を入力
     printf("0:グー, 1:チョキ, 2:パー\n");
-    scanf("%d", &Player_hand);
-    getchar();
+    while(scanf("%d", &Player_hand) != 1 || (Player_hand < 0 || Player_hand > 2)){
+      printf("エラー\n");
+      printf("0:グー, 1:チョキ, 2:パー\n");
+      while(getchar() != '\n');
+    }
+    while(getchar() != '\n');/////
 
     //敵の選択肢
-    Enemy_hand = count % 3;
+    Enemy_hand = func(gamecount, Player_wins, Enemy_wins, Player_before_hand, Enemy_before_hand);
 
     //プレイヤーと敵の手、勝敗結果を表示
     printf("あなたの手: ");
@@ -59,14 +90,27 @@ void Pattern1()
         //プレイヤーの負けの場合
         Enemy_wins++;
         break;
-    }
+    }/////switch/////
 
-    //1戦毎に行う処理
-    count++;
-  }
-   //決着が着いた後
+    ///////////////////1戦毎の処理///////////////////
+    gamecount++;//試合数カウントインクリメント
+
+    //直前のプレイヤーと敵の手を記憶
+    Player_before_hand = Player_hand;
+    Enemy_before_hand = Enemy_hand;
+
+    /////////////////////////////////////////////////
+
+  }/////while/////
+
+  //決着が着いた後
    GameEnd(Player_wins, Enemy_wins);
+}
 
+int Pattern1(int g_count, int p_wins, int e_wins, int ply_bef_hand, int enm_bef_hand)
+{
+  //グー、チョキ、パーの順で出していくパターン
+  return g_count % 3;
 }
 
 int Judge(int Player_h, int Enemy_h)
